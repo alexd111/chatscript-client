@@ -6,42 +6,52 @@
         Housy the house bot
     </title>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 
 <body>
+  <nav style="background-color:#26a69a;">
+    <div class="nav-wrapper">
+      <a href="#" class="brand-logo"><i class="large material-icons">home</i> Housy</a>
+      <ul id="nav-mobile" class="right hide-on-med-and-down">
+      </ul>
+    </div>
+  </nav>
     <div class="container">
-        <div id="responseHolder">
+        <div class="row">
+            <div id="main-div" class="col s12 m9 l10">
+                <div id="responseHolder">
+                </div>
+
+                <form id="frmChat" autocomplete=off action="#">
+
+                    <table>
+                        <tr id="name-input">
+                            <td>Name:</td>
+                            <td>
+                                <input type="text" id="txtUser" name="user" size="20" value="" />
+                                <input type="hidden" name="send" />
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Message:</td>
+                            <td><input type="text" name="message" id="txtMessage" size="70" /></td>
+                        </tr>
+                        <tr>
+                            <td colspan="2"><button class="btn waves-effect waves-light" id="send-message" type="submit" name="send" value="Send Value"><i class="material-icons">send</i></button></td>
+                        </tr>
+                    </table>
+                </form>
+                <ul id="displayData" class="collapsible" data-collapsible="accordion">
+                </ul>
+            </div>
         </div>
-
-        <form id="frmChat" action="#">
-            <p>
-                Enter your message below:
-            </p>
-            <table>
-                <tr>
-                    <td>Name:</td>
-                    <td>
-                        <input type="text" id="txtUser" name="user" size="20" value="" />
-                        <input type="hidden" name="send" />
-                    </td>
-                </tr>
-                <tr>
-                    <td>Message:</td>
-                    <td><input type="text" name="message" id="txtMessage" size="70" /></td>
-                </tr>
-                <tr>
-                    <td colspan="2"><input type="submit" name="send" value="Send Value" /></td>
-                </tr>
-            </table>
-        </form>
-        <ul id="displayData" class="collapsible" data-collapsible="accordion">
-        </ul>
-
     </div>
 
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.98.0/css/materialize.min.css">
+    <link rel="stylesheet" href="css/style.css" type="text/css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.98.0/js/materialize.min.js"></script>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <script type="text/javascript">
@@ -77,6 +87,7 @@
         });
 
         function sendMessage(data) { //Sends inputs to the ChatScript server, and returns the response-  data - a JSON string of input information
+            $('#main-div').append('<div id="loader" class="progress"> <div class="indeterminate"></div> </div>');
             $.ajax({
                 url: 'ui.php',
                 dataType: 'text',
@@ -172,7 +183,14 @@
             // var rhd = $('#responseHolder');
             // var h = rhd.get(0).scrollHeight;
             // rhd.scrollTop(h);
-            $('#responseHolder').append('<br><div class="chip"><i class="material-icons">person</i>' + text + '</div>')
+            $('#loader').remove();
+            if (text.includes("Housy")) {
+              $('#responseHolder').append('<blockquote style="border-left-color:#ff5722;">' + text + '</blockquote>')
+            }
+            else {
+              $('#responseHolder').append('<blockquote style="border-left-color:#673ab7;">' + text + '</blockquote>')
+            }
+
         }
 
         function processResponse(response) { // given the final CS text, converts the parsed response from the CS server into HTML code for adding to the response holder div
@@ -181,6 +199,7 @@
             jsonString = tryParseJSON(response);
             if (typeof jsonString == 'object') {
                 displayHouses(jsonString);
+                $('#loader').remove();
             } else {
                 update(botSaid);
             }
@@ -202,13 +221,37 @@
         function displayHouses(houseList) {
             console.log(houseList);
             for (i = 0; i < houseList.length; i++) {
-                // $('#displayData').append('<li>')
-                $('#displayData').append('<li><div class="collapsible-header">' + houseList[i].address + '</div><div class="collapsible-body"> ' + houseList[i].url + '</div></li>');
-                // $('#displayData').append('<div class="collapsible-body">' + houseList[i].url + '</div></li>');
-                // $('#displayData').append('</li>')
-                // $('#displayData').append('<h4>' + houseList[i].url + '</h4>')
-                // $('#displayData').append('<p> Number of bedrooms: ' + houseList[i].bedrooms + '<p>')
-                // $('#displayData').append('<p>Price per month: ' + houseList[i].ppm + '<p>')
+                if (houseList[i].isFurnished === 1) {
+                  is_furnished = '<i class="tiny material-icons">done</i>';
+                }
+                else if (houseList[i].isFurnished === 0) {
+                  is_furnished = '<i class="tinymaterial-icons">clear</i>';
+                }
+                else {
+                  is_furnished = '<i class="tiny material-icons">help_outline</i>';
+                }
+                console.log(houseList[i].billsInc);
+                if (houseList[i].bills_inc === "1") {
+                  bills_inc = '<i class="tiny material-icons">done</i>';
+                }
+                else if (houseList[i].billsInc === "1") {
+                  bills_inc = '<i class="tiny material-icons">clear</i>';
+                }
+                else {
+                  bills_inc = '<i class="tiny material-icons">help_outline</i>';
+                }
+
+                $('#displayData').append('<li>' +
+                    '<div class="collapsible-header">' + houseList[i].bedrooms +
+                    ' bedroom house in ' + houseList[i].address + '</div>' +
+                    '<div class="collapsible-body"> '+
+                    'Price per month: <b>£' + houseList[i].ppm + '</b> <br>' +
+                    'Furnished: ' + is_furnished + '<br>' +
+                    'Bills included: ' + bills_inc + '<br>' +
+                    '<a href="' + houseList[i].url + '"target="_blank">' +
+                    '<i class="material-icons">open_in_new</i></a><br>' +
+                    '</div>' +
+                  '</li>');
                 console.log(houseList[i].url)
             }
             $(document).ready(function() {
@@ -216,6 +259,10 @@
             });
 
         }
+
+        $("#send-message").click(function() {
+            $('#name-input').hide();
+        });
     </script>
 </body>
 
